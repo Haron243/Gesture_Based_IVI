@@ -45,6 +45,9 @@ class ModernContactUI(QMainWindow):
         
         # 3. Connect Selection Logic (NEW)
         self.thread.select_detected.connect(self.handle_selection)
+
+        # --- NEW CONNECTION ---
+        self.thread.disconnect_detected.connect(self.handle_disconnect)
         
         self.thread.start()
 
@@ -263,6 +266,40 @@ class ModernContactUI(QMainWindow):
             from PyQt5.QtCore import QTimer
             QTimer.singleShot(1000, lambda: self.apply_styles())
 
+    def handle_disconnect(self):
+        # 1. Clear Data
+        self.current_filter = ""
+        self.search_display.setText("Input: _")
+        
+        # 2. Reset List
+        self.contact_list.clear()
+        self.contact_list.addItems(self.all_contacts)
+        self.contact_list.scrollToTop()
+        
+        # 3. Visual Feedback
+        print("UI: Switching to Main Menu")
+        self.header_label.setText("MAIN MENU")
+        self.search_display.setText("Call Disconnected")
+        
+        # Flash Red
+        self.setStyleSheet("QMainWindow { background-color: #440000; }") 
+        
+        from PyQt5.QtCore import QTimer
+        def restore():
+            self.header_label.setText("CONTACTS")
+            self.search_display.setText("Input: _")
+            # Restore original dark theme
+            self.setStyleSheet("""
+                QMainWindow { background-color: #121212; }
+                #LeftPanel { background-color: #1E1E1E; border-right: 2px solid #333; }
+                #RightPanel { background-color: #121212; }
+                /* ... rest of your styles ... */
+            """)
+            # Note: For cleaner code, put your full stylesheet in a self.style_string variable
+            # and re-apply it here: self.setStyleSheet(self.style_string)
+            
+        QTimer.singleShot(1500, restore)
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ModernContactUI()

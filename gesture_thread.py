@@ -7,57 +7,75 @@ import math
 class GestureThread(QThread):
     gesture_detected = pyqtSignal(str) 
     scroll_detected = pyqtSignal(str)  
-    select_detected = pyqtSignal()     
+    select_detected = pyqtSignal()
+    disconnect_detected = pyqtSignal() 
     
     def __init__(self):
         super().__init__()
         self.running = True
+        
+        # --- MediaPipe Setup ---
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
             max_num_hands=1,
+            model_complexity=0,
             min_detection_confidence=0.7,
             min_tracking_confidence=0.5
         )
-        # VISUAL DEBUGGER TOOL
         self.mp_draw = mp.solutions.drawing_utils 
         
-        # Stability / Debouncing
+        # --- TIMING & STABILITY CONTROLS ---
         self.last_prediction = -1
         self.stable_frame_count = 0
-        self.STABILITY_THRESHOLD = 5 # Reduced for faster response during testing
-        self.last_gesture_time = 0
-        self.current_sequence = ""
+        self.STABILITY_THRESHOLD = 8 
         
-        # Motion Tracking
+        self.current_sequence = ""
+        self.last_digit_time = 0 # Track when we last added to the sequence (e.g. 5-5-2)
+        
+        # --- NEW: COOLDOWN TIMER ---
+        self.last_trigger_time = 0
+        self.COOLDOWN_SECONDS = 1.0 # <--- 1 Second Delay between inputs
+        
+        # Motion State
         self.prev_index_y = None
-        self.SCROLL_THRESH = 0.04 
         self.is_pinching = False
 
-    def calculate_distance(self, p1, p2):
+    def get_dist(self, p1, p2):
         return math.hypot(p1.x - p2.x, p1.y - p2.y)
 
-    def detect_gesture_and_action(self, landmarks):
+    def process_hand(self, landmarks, label):
+        # 1. Left Hand Only (Mirrored label is "Right")
+        if label == "Left": return -1, None
+
+        thumb_tip = landmarks[4]
+        thumb_ip = landmarks[3]
+        thumb_mcp = landmarks[2]
+        index_tip = landmarks[8]
+        pinky_base = landmarks[17]
+
+        # 2. Disconnect (Thumbs Down)
+        if thumb_tip.y > thumb_mcp.y and index_tip.y < thumb_mcp.y:
+            return -1, "DISCONNECT"
+
+        # 3. Finger States
         fingers = []
-        
-        # Thumb Logic (Simplified for general use)
-        # If thumb tip (4) is to the left of IP joint (3) -> Open (For Right Hand)
-        if landmarks[4].x < landmarks[3].x: 
-            fingers.append(1)
+        # Thumb Open Check
+        if self.get_dist(thumb_tip, pinky_base) > self.get_dist(thumb_ip, pinky_base):
+            thumb_is_open = True
         else:
-            fingers.append(0)
+            thumb_is_open = False
             
-        # Fingers 2-5 (Index to Pinky)
-        for tip in [8, 12, 16, 20]:
-            if landmarks[tip].y < landmarks[tip - 2].y:
+        # Fingers 2-5
+        for tip_id in [8, 12, 16, 20]:
+            if landmarks[tip_id].y < landmarks[tip_id - 2].y:
                 fingers.append(1)
             else:
                 fingers.append(0)
         
         total_fingers = fingers.count(1)
-        
-        # --- ACTION: PINCH (SELECT) ---
-        pinch_dist = self.calculate_distance(landmarks[4], landmarks[8])
-        if pinch_dist < 0.05:
+
+        # 4. Pinch (Select) - Increased distance for easier pinch
+        if self.get_dist(thumb_tip, index_tip) < 0.07:
             if not self.is_pinching:
                 self.is_pinching = True
                 return -1, "SELECT"
@@ -65,17 +83,15 @@ class GestureThread(QThread):
         else:
             self.is_pinching = False
 
-        # --- ACTION: SCROLL (Index Only) ---
-        # Pattern: Index(1) is UP, others are DOWN
-        # Note: We check if total_fingers is 1 AND index is the one up
-        if total_fingers == 1 and fingers[1] == 1:
-            current_y = landmarks[8].y
+        # 5. Scroll (Index Only)
+        if fingers[0] == 1 and fingers[1] == 0 and fingers[2] == 0 and fingers[3] == 0:
+            current_y = index_tip.y
             if self.prev_index_y is not None:
                 diff = self.prev_index_y - current_y
-                if diff > self.SCROLL_THRESH:
+                if diff > 0.05: # Stricter threshold for scroll
                     self.prev_index_y = current_y
                     return -1, "SCROLL_UP"
-                elif diff < -self.SCROLL_THRESH:
+                elif diff < -0.05:
                     self.prev_index_y = current_y
                     return -1, "SCROLL_DOWN"
             else:
@@ -84,34 +100,33 @@ class GestureThread(QThread):
         else:
             self.prev_index_y = None
 
-        # --- DIGIT RECOGNITION ---
-        if total_fingers <= 5 and total_fingers > 0:
-            # Check ASL 6 (Pinky + Thumb touch)
-            if self.calculate_distance(landmarks[4], landmarks[20]) < 0.05: return 6, None
-            # ASL 7 (Ring + Thumb touch)
-            elif self.calculate_distance(landmarks[4], landmarks[16]) < 0.05: return 7, None
-            # ASL 8 (Middle + Thumb touch)
-            elif self.calculate_distance(landmarks[4], landmarks[12]) < 0.05: return 8, None
-            
-            return total_fingers, None
-            
-        elif total_fingers == 0:
-            return 0, None
+        # 6. Digits (1-9)
+        if thumb_is_open:
+            if total_fingers == 0: return 6, None
+            if total_fingers == 1: return 7, None
+            if total_fingers == 2: return 8, None
+            if total_fingers == 3: return 9, None
+            if total_fingers == 4: return 5, None
+        else:
+            if total_fingers == 1: return 1, None
+            if total_fingers == 2: return 2, None
+            if total_fingers == 3: return 3, None
+            if total_fingers == 4: return 4, None
+            # if total_fingers == 0: return 0, None # Optional: Ignore 0/Fist to avoid noise
 
         return -1, None
 
     def run(self):
-        # Try index 0 first, then 1 if camera doesn't open
-        cap = cv2.VideoCapture(0) 
-        
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
         while self.running:
             ret, frame = cap.read()
             if not ret: 
-                print("Camera not detected! Trying to reconnect...")
-                time.sleep(1)
+                time.sleep(0.1)
                 continue
             
-            # Flip and Convert
             frame = cv2.flip(frame, 1) 
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = self.hands.process(rgb)
@@ -119,29 +134,51 @@ class GestureThread(QThread):
             digit = -1
             action = None
             
+            # --- COOLDOWN CHECK ---
+            # If we just triggered an action, skip processing for 1 second
+            if time.time() - self.last_trigger_time < self.COOLDOWN_SECONDS:
+                # We still draw the skeleton so the UI doesn't look frozen
+                if results.multi_hand_landmarks:
+                    for hand_lm in results.multi_hand_landmarks:
+                        self.mp_draw.draw_landmarks(frame, hand_lm, self.mp_hands.HAND_CONNECTIONS)
+                
+                cv2.imshow("Gesture Debug", frame)
+                cv2.waitKey(1)
+                continue # SKIP LOGIC LOOP
+            
             if results.multi_hand_landmarks:
-                for hand_lm in results.multi_hand_landmarks:
-                    # DRAW SKELETON (Visual Debug)
+                for idx, hand_lm in enumerate(results.multi_hand_landmarks):
+                    lbl = results.multi_handedness[idx].classification[0].label
                     self.mp_draw.draw_landmarks(frame, hand_lm, self.mp_hands.HAND_CONNECTIONS)
                     
-                    digit, action = self.detect_gesture_and_action(hand_lm.landmark)
-            
-            # --- SHOW DEBUG WINDOW ---
-            cv2.imshow("Gesture Debug View (Press 'q' to quit)", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+                    digit, action = self.process_hand(hand_lm.landmark, lbl)
+                    if digit != -1 or action is not None:
+                        break 
 
-            # --- EMIT SIGNALS ---
-            if action == "SELECT":
-                print(">>> Action: SELECT (Pinch)")
+            # --- EMIT SIGNALS (With Cooldown Trigger) ---
+            triggered = False
+            
+            if action == "DISCONNECT":
+                print(">>> Action: DISCONNECT")
+                self.disconnect_detected.emit()
+                triggered = True
+                
+            elif action == "SELECT":
+                print(">>> Action: SELECT")
                 self.select_detected.emit()
+                triggered = True
+                
             elif action == "SCROLL_UP":
                 print(">>> Action: SCROLL UP")
                 self.scroll_detected.emit("UP")
+                triggered = True # Scroll also gets a delay (prevents jumpy lists)
+                
             elif action == "SCROLL_DOWN":
                 print(">>> Action: SCROLL DOWN")
                 self.scroll_detected.emit("DOWN")
-            
+                triggered = True
+
+            # Digit Logic
             if digit != -1 and action is None:
                 if digit == self.last_prediction:
                     self.stable_frame_count += 1
@@ -150,21 +187,32 @@ class GestureThread(QThread):
                     self.last_prediction = digit
                 
                 if self.stable_frame_count == self.STABILITY_THRESHOLD:
-                    print(f">>> Digit Confirmed: {digit}")
+                    print(f">>> Digit: {digit}")
                     self.process_digit(digit)
-                    
+                    triggered = True
+
+            # If ANY action happened, reset the cooldown timer
+            if triggered:
+                self.last_trigger_time = time.time()
+                self.stable_frame_count = 0 # Reset stability
+                self.prev_index_y = None    # Reset scroll state
+
+            cv2.imshow("Gesture Debug", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'): break
+        
         cap.release()
         cv2.destroyAllWindows()
 
     def process_digit(self, digit):
         current_time = time.time()
-        if current_time - self.last_gesture_time > 2.0:
+        # Reset sequence if user waited more than 2 seconds between digits
+        if current_time - self.last_digit_time > 2.0:
             self.current_sequence = ""
-        self.last_gesture_time = current_time
+            
+        self.last_digit_time = current_time
         self.current_sequence += str(digit)
         self.gesture_detected.emit(self.current_sequence)
-        self.stable_frame_count = 0
-    
+
     def stop(self):
         self.running = False
         self.wait()
