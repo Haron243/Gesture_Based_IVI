@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QListWidget, QLabel, QFrame, QGridLayout)
 from PyQt5.QtCore import Qt, QTimer
 from gesture_thread import GestureThread
+import time 
 
 class ModernContactUI(QMainWindow):
     def __init__(self):
@@ -21,6 +22,11 @@ class ModernContactUI(QMainWindow):
         ]
         
         self.input_buffer = "" 
+        self.last_input_time = time.time()
+
+        self.input_timer = QTimer()
+        self.input_timer.timeout.connect(self.reset_if_timeout)
+        self.input_timer.start(200)  # check every 200 ms
         
         self.init_ui()
         
@@ -145,13 +151,14 @@ class ModernContactUI(QMainWindow):
     # --- LOGIC ---
     def handle_digit_input(self, digit_str):
         self.input_buffer += digit_str
+        self.last_input_time = time.time()  # NEW
         self.search_display.setText(f"Input: {self.input_buffer}")
-        
+
         if len(self.input_buffer) >= 2:
             try:
                 val = int(self.input_buffer)
                 if 1 <= val <= 26:
-                    char = chr(val + 64) 
+                    char = chr(val + 64)
                     self.filter_list_by_char(char)
                 else:
                     self.search_display.setText("Invalid (01-26)")
@@ -211,6 +218,11 @@ class ModernContactUI(QMainWindow):
             self.setStyleSheet(self.style_normal)
             
         QTimer.singleShot(1500, restore)
+    def reset_if_timeout(self):
+        if self.input_buffer and time.time() - self.last_input_time > 1.5:
+            self.input_buffer = ""
+            self.search_display.setText("Input: _")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
