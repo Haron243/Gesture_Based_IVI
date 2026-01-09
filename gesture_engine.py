@@ -127,32 +127,20 @@ class GestureEngine(QThread):
         
         # Key landmarks
         thumb_tip, thumb_ip, thumb_mcp = lm[4], lm[3], lm[2]
-        index_tip, index_mcp = lm[8], lm[5]
-        middle_tip = lm[12]
-        ring_tip = lm[16]
+        index_tip = lm[8]
         pinky_tip, pinky_base = lm[20], lm[17]
         wrist = lm[0]
 
         # Mirror gestures for left-handed mode
         if self.hand_mode == 'left' and handedness == 'Right':
-            # User is using wrong hand, reduce confidence
             confidence *= 0.7
 
-        # 1. CANCEL GESTURE (Open palm hold)
-        all_fingers_open = all(lm[tip].y < lm[tip-2].y for tip in [8, 12, 16, 20])
-        thumb_open = self.get_dist(thumb_tip, pinky_base) > self.get_dist(thumb_ip, pinky_base)
-        
-        if all_fingers_open and thumb_open:
-            if self.cancel_start_time is None:
-                self.cancel_start_time = time.time()
-            elif time.time() - self.cancel_start_time > self.CANCEL_HOLD_TIME:
-                return -1, "CANCEL", confidence
-        else:
-            self.cancel_start_time = None
+        # --- 1. STRICT DISCONNECT (Thumbs Down + Fist) ---
+        # Logic: Thumb is pointing DOWN, and Index Finger is CLOSED
+        thumb_is_down = thumb_tip.y > thumb_mcp.y
+        index_is_closed = lm[8].y > lm[6].y # Tip below PIP joint (curled)
 
-        # 2. DISCONNECT (Thumbs down - Highest Priority)
-        thumbs_down = thumb_tip.y > thumb_mcp.y and index_tip.y < thumb_mcp.y
-        if thumbs_down:
+        if thumb_is_down and index_is_closed:
             if self.disconnect_start_time is None:
                 self.disconnect_start_time = time.time()
             elif time.time() - self.disconnect_start_time > self.DISCONNECT_HOLD_TIME:
@@ -160,18 +148,36 @@ class GestureEngine(QThread):
         else:
             self.disconnect_start_time = None
 
-        # 3. SWIPE DETECTION (Alphabet jump)
+        # --- 2. CANCEL GESTURE 
+        # Logic: Thumb & Pinky OPEN, Index/Middle/Ring CLOSED
+        thumb_open = self.get_dist(thumb_tip, pinky_base) > self.get_dist(thumb_ip, pinky_base)
+        pinky_open = lm[20].y < lm[18].y # Pinky Tip above Pinky PIP
+        
+        # Check if middle 3 fingers are closed
+        middle_closed = (lm[8].y > lm[6].y and   # Index
+                         lm[12].y > lm[10].y and # Middle
+                         lm[16].y > lm[14].y)    # Ring
+        
+        if thumb_open and pinky_open and middle_closed:
+            if self.cancel_start_time is None:
+                self.cancel_start_time = time.time()
+            elif time.time() - self.cancel_start_time > self.CANCEL_HOLD_TIME:
+                return -1, "CANCEL", confidence
+        else:
+            self.cancel_start_time = None
+
+        # --- 3. SWIPE DETECTION ---
         swipe_dir = self.detect_swipe(wrist)
         if swipe_dir:
             return -1, f"SWIPE_{swipe_dir}", confidence
 
-        # 4. SCROLL CHECK (Zone Locking)
+        # --- 4. SCROLL CHECK (Zone Locking) ---
         if wrist.y < self.SCROLL_TOP_ZONE:
             return -1, "SCROLL_UP", confidence
         elif wrist.y > self.SCROLL_BOTTOM_ZONE:
             return -1, "SCROLL_DOWN", confidence
 
-        # 5. PINCH (Select)
+        # --- 5. PINCH (Select) ---
         pinch_dist = self.get_dist(thumb_tip, index_tip)
         if pinch_dist < self.PINCH_THRESHOLD * self.sensitivity:
             if not self.is_pinching:
@@ -180,24 +186,24 @@ class GestureEngine(QThread):
             return -1, None, confidence
         self.is_pinching = False
 
-        # 6. NUMERIC GESTURES (T9-Style: 0-9)
+        # --- 6. NUMERIC GESTURES (0-9) ---
         fingers = []
-        thumb_open = self.get_dist(thumb_tip, pinky_base) > self.get_dist(thumb_ip, pinky_base)
-
-        # Count extended fingers
+        # Standard finger counting
         for tip in [8, 12, 16, 20]:
+            # 1 if Finger is UP (Tip higher than PIP joint)
             fingers.append(1 if lm[tip].y < lm[tip - 2].y else 0)
 
         count = fingers.count(1)
 
         # Digit mapping
         if thumb_open:
-            # With thumb: 5-9
-            digit = {0: -1, 1: 6, 2: 7, 3: 8, 4: 9}.get(count, -1)
-            if count == 4:  # All fingers + thumb = 5
-                digit = 5
+            # Thumb + Fingers logic
+            # Note: "Shaka" (Thumb+Pinky) is count=1. We handled it above in Cancel.
+            # If we are here, it's NOT a Cancel hold (or hasn't been held long enough).
+            # We map normal numbers:
+            digit = {0: 6, 1: 7, 2: 8, 3: 9, 4: 5}.get(count, -1)
         else:
-            # Without thumb: 0-4
+            # No Thumb logic
             digit = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}.get(count, -1)
 
         return digit, None, confidence

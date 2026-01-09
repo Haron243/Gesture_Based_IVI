@@ -213,7 +213,6 @@ class GestureMetricsCollector:
         
         try:
             with open(filename, 'w') as f:
-                # --- THE FIX IS HERE (added default=numpy_converter) ---
                 json.dump(report, f, indent=2, default=numpy_converter)
             print(f"\nReport saved successfully to {filename}")
         except Exception as e:
