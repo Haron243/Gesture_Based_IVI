@@ -1,3 +1,8 @@
+Based on the latest code you provided (Fixed Center Zones, Fist-to-Commit, Shaka for Cancel), here is the updated **README.md**.
+
+I have updated the **Gesture Guide**, **Usage Workflow**, and **Key Features** sections to accurately reflect your new Spatial T9 system.
+
+```markdown
 # 🚗 Electrifex IVI System v2.0
 ## Gesture-Based Smart Contact Navigation for Automotive Safety
 
@@ -12,53 +17,39 @@ An advanced hands-free infotainment system that enables drivers to navigate cont
 
 ## 🎯 Key Features
 
+### 🚀 New: Spatial T9 Typing
+- **Spatial Selection**: Select letters by moving your hand **Left, Center, or Right** while holding a number.
+- **Fist-to-Commit**: Instantly type the selected letter by making a **Fist** (no waiting for timers).
+- **Fixed Zones**: Visualized fixed zones on the camera feed for muscle-memory reliability.
+
 ### Enhanced Gesture Recognition
-- **10 Numeric Gestures** (0-9) with T9-style keypad mapping
-- **Pinch-to-Select** for confirming actions
-- **Swipe Gestures** for fast alphabet navigation (A→B→C...)
-- **Hold Gestures**:
-  - Open palm hold → Cancel operation
-  - Thumbs down hold → Disconnect/hang up call
-- **Zone-Based Scrolling** (top/bottom screen zones)
-- **Real-time confidence scoring** with visual feedback
+- **Euro-Style Counting**: Distinct 1-9 numbering system using thumb states.
+- **Zone-Based Scrolling**: Move hand to top/bottom 20% of screen to scroll.
+- **Pinch-to-Select**: "OK" sign to confirm calls.
+- **Safety Gestures**:
+  - 🤙 **Shaka** (Thumb+Pinky) → Cancel/Clear input.
+  - 👎✊ **Thumbs Down + Fist** → Disconnect/Hang up (prevents accidental triggers).
 
 ### Smart Contact Prediction
-- **AI-powered suggestions** based on:
-  - Time of day patterns
-  - Day of week patterns
-  - Call frequency and recency
-  - Average call duration
-  - Location context (optional)
-- **Favorites system** with priority boosting
-- **Fuzzy matching** for flexible name search
-
-### Safety-First UX
-- **Voice feedback** for eyes-free confirmation
-- **Minimal visual distraction** design
-- **Large touch targets** optimized for in-vehicle use
-- **High contrast mode** for bright daylight
-- **Adaptive brightness** for varying lighting conditions
-- **Sub-200ms latency** for responsive feel
-
-### Customization
-- **Left/right hand mode** support
-- **Adjustable sensitivity** settings
-- **Configurable cooldown periods**
-- **Voice feedback toggle**
-- **Dark/High-contrast themes**
+- **AI-powered suggestions** based on time, day, and frequency.
+- **Favorites system** with priority boosting.
+- **Fuzzy matching** allows for flexible name searching even with typos.
 
 ---
 
 ## 📁 Project Structure
 
+
 ```
+
 electrifex-ivi/
-├── gesture_engine.py        # Enhanced gesture detection core
-├── main.py                   # Main IVI interface
-├── smart_predictor.py        # AI contact prediction system
-├── requirements.txt          # Python dependencies
-├── README.md                 # This file
-└── contact_patterns.json     # Auto-generated user patterns (created at runtime)
+├── gesture_engine.py        # Enhanced gesture detection (Spatial Logic)
+├── main.py                  # Main IVI interface (PyQt5)
+├── smart_predictor.py       # AI contact prediction system
+├── requirements.txt         # Python dependencies
+├── README.md                # This file
+└── contact_patterns.json    # Auto-generated user patterns
+
 ```
 
 ---
@@ -67,66 +58,96 @@ electrifex-ivi/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/electrifex-ivi.git
+git clone [https://github.com/Haron243/electrifex-ivi.git](https://github.com/Haron243/electrifex-ivi.git)
 cd electrifex-ivi
+
 ```
 
 ### 2. Install dependencies
+
 ```bash
 pip install -r requirements.txt
+
 ```
 
 ### 3. Run the application
+
 ```bash
 python main.py
+
 ```
 
 ---
 
 ## 🎮 Gesture Guide
 
-| Gesture | Action | How To |
-|---------|--------|--------|
-| **0-9 Fingers** | T9 Input | Hold up corresponding number of fingers |
-| **Pinch** (Thumb + Index) | Select/Confirm | Touch thumb tip to index finger tip |
-| **Hand at Top** | Scroll Up | Move wrist above top zone line |
-| **Hand at Bottom** | Scroll Down | Move wrist below bottom zone line |
-| **Swipe Right** | Next Letter (A→B) | Quick horizontal hand movement right |
-| **Swipe Left** | Previous Letter (Z→Y) | Quick horizontal hand movement left |
-| **Open Palm Hold** (1s) | Cancel/Clear | All five fingers extended, hold steady |
-| **Thumbs Down Hold** (1.5s) | Disconnect Call | Thumb down, fingers up, hold steady |
+### 1. The Numbers (Inputs)
 
-### T9 Keypad Mapping
-```
-1 = [Clear/Backspace]
-2 = ABC    3 = DEF
-4 = GHI    5 = JKL    6 = MNO
-7 = PQRS   8 = TUV    9 = WXYZ
-0 = Space
-```
+| Number | Gesture | T9 Letters |
+| --- | --- | --- |
+| **1** | Index Finger Up | **BACKSPACE** |
+| **2** | Index + Middle | A, B, C |
+| **3** | Index + Mid + Ring | D, E, F |
+| **4** | Four Fingers | G, H, I |
+| **5** | All 5 Fingers (Open Palm) | J, K, L |
+| **6** | Thumb Only (👍) | M, N, O |
+| **7** | Thumb + Index | P, Q, R, S |
+| **8** | Thumb + Index + Middle | T, U, V |
+| **9** | Thumb + Index + Mid + Ring | W, X, Y, Z |
+| **0** | **CLOSED FIST** (✊) | **COMMIT / ENTER** |
 
-**Example**: To type "HELLO":
-1. Show **4** (GHI) → tap twice → **H**
-2. Show **3** (DEF) → tap twice → **E**
-3. Show **5** (JKL) → tap once → **L**
-4. Show **5** (JKL) → tap once → **L**
-5. Show **6** (MNO) → tap three times → **O**
+### 2. Control Gestures
+
+| Gesture | Action | Description |
+| --- | --- | --- |
+| **Pinch** (👌) | **Select** | Pinch Index & Thumb to call selected contact. |
+| **Shaka** (🤙) | **Cancel** | Thumb & Pinky out. Clears input/search. |
+| **Thumbs Down + Fist** | **Hang Up** | Thumb down, fingers curled. Disconnects call. |
+| **Hand High** | **Scroll Up** | Move wrist to top 20% of frame. |
+| **Hand Low** | **Scroll Down** | Move wrist to bottom 20% of frame. |
+
+---
+
+## 🖐️ How to Type (Spatial T9)
+
+Typing is a fast, 3-step process. You do not need to "multi-tap".
+
+**Example: To type the letter "A" (First letter of key '2'):**
+
+1. **HOLD**: Show **2 Fingers** (Index + Middle).
+* *UI shows: A | B | C*
+
+
+2. **MOVE**: Move your hand to the **LEFT** side of the frame.
+* *UI Highlights: [ A ]*
+
+
+3. **COMMIT**: Close your hand into a **FIST**.
+* *System types: "A"*
+
+
+
+**Zone Mapping:**
+
+* **Left Zone**: 1st Letter (e.g., A, D, G...)
+* **Center Zone**: 2nd Letter (e.g., B, E, H...)
+* **Right Zone**: 3rd Letter (e.g., C, F, I...)
+* *(Far Right Zone used for 4th letters on keys 7 & 9)*
 
 ---
 
 ## 🎬 Usage Workflow
 
 ### Making a Call
-1. **Filter contacts** using T9 gestures (e.g., "5" → shows contacts starting with J, K, L)
-2. **Scroll** through filtered list using zone scrolling or swipes
-3. **Pinch** to select and initiate call
-4. **Thumbs down** to hang up when done
 
-### Quick Actions
-- **Swipe** to jump between alphabet sections
-- **Open palm** to cancel current input and return to full contact list
-- **Favorites** appear at top with ⭐ indicator
-- **Recent calls** show with 🕒 indicator
+1. **Search**: Use the Spatial T9 method to type the first letter of the name.
+* *Example: To find "Mom", hold '6' (MNO) -> Move Left -> Make Fist.*
+
+
+2. **Refine**: If needed, type the second letter.
+3. **Scroll**: If the contact isn't selected, move hand down to scroll.
+4. **Call**: Pinch (👌) to dial.
+5. **End**: Thumbs down (👎) with a fist to hang up.
 
 ---
 
@@ -134,107 +155,20 @@ python main.py
 
 Access settings via the **"SET"** button in the sidebar:
 
-- **Hand Mode**: Switch between right/left hand preference
-- **Gesture Sensitivity**: Adjust detection threshold (0.5x - 1.5x)
-- **Voice Feedback**: Enable/disable audio confirmations
-- **High Contrast**: Toggle enhanced visibility for daylight
-
----
-
-## 🧠 Smart Prediction System
-
-The system learns from your usage patterns:
-
-### What It Tracks
-- **Time patterns** (Who you call at what time)
-- **Day patterns** (Who you call on which days)
-- **Frequency** (How often you call someone)
-- **Recency** (When you last called)
-- **Duration** (Average call length)
-- **Location** (Optional: where you were when calling)
-
-### How It Helps
-- **Auto-prioritizes** likely contacts at the top
-- **Reduces gestures** needed to reach frequent contacts
-- **Adapts** to your daily routine
-- **Explains** why contacts are suggested
-
-**Example**: If you call your boss every weekday morning at 9 AM from the office, the system will automatically prioritize them during those times.
+* **Hand Mode**: Switch between right/left hand preference (mirrors gestures).
+* **Gesture Sensitivity**: Adjust detection threshold.
+* **Voice Feedback**: Enable/disable TTS audio confirmations.
+* **High Contrast**: Toggle enhanced visibility for daylight driving.
 
 ---
 
 ## 📊 Performance Metrics
 
-The system tracks and displays:
-- **Detection accuracy** (% of correct gesture recognitions)
-- **Average confidence score** (gesture stability)
-- **Frame rate** (processing speed)
-- **False positive rate** (unwanted detections)
+The system tracks metrics in real-time. View the console output upon closing the app for a detailed report:
 
-View metrics in terminal when closing the application.
-
----
-
-## 🔧 Technical Details
-
-### Architecture
-- **Gesture Engine** (`gesture_engine.py`): MediaPipe-based hand tracking with confidence scoring
-- **UI Layer** (`main.py`): PyQt5 interface optimized for automotive displays
-- **AI Predictor** (`smart_predictor.py`): Pattern learning and contact ranking system
-
-### Key Algorithms
-1. **Gesture Stability**: Multi-frame validation to reject transient movements
-2. **Zone Locking**: Prevents accidental scrolling during intentional gestures
-3. **Adaptive Timing**: Smart cooldowns that balance responsiveness vs reliability
-4. **Fuzzy Matching**: Handles imperfect T9 input gracefully
-
-### Performance Optimizations
-- **Model Complexity**: Balanced between accuracy (1) and speed
-- **Frame Buffering**: Reduces processing overhead
-- **Brightness Normalization**: Adapts to lighting conditions automatically
-- **Efficient State Management**: Minimal memory footprint
-
----
-
-## 🎯 Evaluation Against Project Goals
-
-| Milestone | Status | Notes |
-|-----------|--------|-------|
-| **Hand Detection** | ✅ Complete | Stable tracking under varying conditions |
-| **Gesture Classification** | ✅ Complete | 0-9 + 5 special gestures with confidence scoring |
-| **Temporal Sequencing** | ✅ Complete | T9 multi-tap with auto-commit timing |
-| **IVI Integration** | ✅ Complete | Full contact navigation + smart predictions |
-| **Safety UX** | ✅ Complete | Voice feedback, minimal distraction design |
-| **Latency** | ✅ <200ms | Typically 50-100ms end-to-end |
-
----
-
-## 🐛 Known Limitations
-
-1. **Lighting**: Very dim (<20 lux) or very bright (direct sunlight) conditions may reduce accuracy
-2. **Hand Size**: Optimized for adult hands; children may need recalibration
-3. **Gloves**: Thick gloves interfere with finger detection
-4. **Multitasking**: System assumes driver is not actively steering during gesture input
-5. **Camera Position**: Requires clear view of driver's hand workspace
-
----
-
-## 🚀 Future Enhancements
-
-### Planned Features
-- [ ] **ML Gesture Model**: Train custom CNN for user-specific gestures
-- [ ] **Multi-Language T9**: Support for non-English contact names
-- [ ] **Context Awareness**: GPS integration for location-based predictions
-- [ ] **Voice Commands**: Hybrid gesture + voice control
-- [ ] **Driver Monitoring**: Attention detection for safety warnings
-- [ ] **Gesture Macros**: Custom multi-gesture sequences for power users
-- [ ] **Cloud Sync**: Backup patterns across vehicles
-
-### Research Directions
-- [ ] **Depth Sensing**: Use 3D cameras for more robust detection
-- [ ] **Eye Tracking**: Gaze-based contact selection
-- [ ] **Haptic Feedback**: Steering wheel vibration on gesture recognition
-- [ ] **Thermal Imaging**: Night-time gesture detection
+* **Detection accuracy**
+* **Average confidence score**
+* **FPS (Frames Per Second)**
 
 ---
 
@@ -246,29 +180,23 @@ This project is developed for the **HackEFX** automotive innovation challenge.
 
 ## 🙏 Acknowledgments
 
-- **MediaPipe** for the excellent hand tracking framework
-- **OpenCV** for computer vision tools
-- **PyQt5** for the professional UI framework
-- **HackEFX** for the challenge inspiration
+* **MediaPipe** for the excellent hand tracking framework.
+* **OpenCV** for computer vision tools.
+* **PyQt5** for the professional UI framework.
 
 ---
 
 ## 📧 Contact
 
 For questions, suggestions, or collaboration:
-- **Email**: your.email@example.com
-- **GitHub**: [@yourusername](https://github.com/yourusername)
 
----
-
-## 🎥 Demo Video
-
-[Link to demonstration video showing system in action]
+* **Email**: haronmalayil@gmail.com
+* **GitHub**: [@Haron243](https://github.com/Haron243)
 
 ---
 
 **⚠️ Safety Notice**: This system is designed to minimize distraction, but drivers should always prioritize road safety. Use voice commands when possible and only interact with the system when safe to do so.
 
----
+```
 
-**Built with ❤️ for safer driving experiences**
+```
