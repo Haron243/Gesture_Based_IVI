@@ -188,8 +188,11 @@ PyQt5 – Professional UI framework
 
 ## 📧 Contact
 
-Email: [haronmalayil@gmail.com](mailto:haronmalayil@gmail.com)
-GitHub: [https://github.com/Haron243](https://github.com/Haron243)
+| Platform | Link |
+| :--- | :--- |
+| **Email** | [haronmalayil@gmail.com](mailto:haronmalayil@gmail.com) |
+| **GitHub** | [github.com/Haron243](https://github.com/Haron243) |
+| **LinkedIn** | [Connect with me](https://linkedin.com/in/haron-varughese) |
 
 ---
 
