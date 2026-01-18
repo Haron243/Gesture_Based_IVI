@@ -75,28 +75,30 @@ python main.py
 
 ### Number Gestures (Inputs)
 
-Number | Gesture | T9 Letters
-1 | Index Finger Up | BACKSPACE
-2 | Index + Middle | A, B, C
-3 | Index + Middle + Ring | D, E, F
-4 | Four Fingers | G, H, I
-5 | Open Palm | J, K, L
-6 | Thumb Only (👍) | M, N, O
-7 | Thumb + Index | P, Q, R, S
-8 | Thumb + Index + Middle | T, U, V
-9 | Thumb + Index + Middle + Ring | W, X, Y, Z
-0 | Closed Fist (✊) | COMMIT / ENTER
+| Number | Gesture | T9 Letters |
+| :--- | :--- | :--- |
+| **1** | Index Finger Up | BACKSPACE |
+| **2** | Index + Middle | A, B, C |
+| **3** | Index + Middle + Ring | D, E, F |
+| **4** | Four Fingers | G, H, I |
+| **5** | Open Palm | J, K, L |
+| **6** | Thumb Only (👍) | M, N, O |
+| **7** | Thumb + Index | P, Q, R, S |
+| **8** | Thumb + Index + Middle | T, U, V |
+| **9** | Thumb + Index + Middle + Ring | W, X, Y, Z |
+| **0** | Closed Fist (✊) | COMMIT / ENTER |
 
 ---
 
 ### Control Gestures
 
-Gesture | Action | Description
-Pinch (👌) | Select | Call selected contact
-Shaka (🤙) | Cancel | Clear input/search
-Thumbs Down + Fist | Hang Up | Disconnect active call
-Hand High | Scroll Up | Move hand to top 20% of frame
-Hand Low | Scroll Down | Move hand to bottom 20% of frame
+| Gesture | Action | Description |
+| :--- | :--- | :--- |
+| **Pinch** (👌) | Select | Call selected contact |
+| **Shaka** (🤙) | Cancel | Clear input/search |
+| **Thumbs Down + Fist** | Hang Up | Disconnect active call |
+| **Hand High** | Scroll Up | Move hand to top 20% of frame |
+| **Hand Low** | Scroll Down | Move hand to bottom 20% of frame |
 
 ---
 
