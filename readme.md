@@ -42,6 +42,7 @@ An advanced hands-free infotainment system that enables drivers to navigate cont
 
 ## 📁 Project Structure
 
+```text
 electrifex-ivi/
 ├── gesture_engine.py        # Enhanced gesture detection (Spatial Logic)
 ├── main.py                  # Main IVI interface (PyQt5)
@@ -49,6 +50,7 @@ electrifex-ivi/
 ├── requirements.txt         # Python dependencies
 ├── README.md                # This file
 └── contact_patterns.json    # Auto-generated user patterns
+```
 
 ---
 
